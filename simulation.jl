@@ -51,6 +51,9 @@ function equilibrium(Φ_guess)
     dif = 1
 
     Φ = Φ_guess
+    θ = zeros(N, 1) # I need to write an object before a while loop...
+    X = zeros(N, 1)
+    P = zeros(N, 1)
     while dif > tol && it < maxit
         θ = VLratio(Φ)
         X = expenditure(θ)
@@ -63,7 +66,7 @@ function equilibrium(Φ_guess)
     end
 
     dif = fill(dif, N)
-    w = ζ .* θ .* L
+    w = ζ .* θ .^ χ
     u = ones(N, 1) - θ .^ (1-χ)
 
     return [Φ θ X P w u dif]
