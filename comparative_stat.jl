@@ -3,7 +3,7 @@
 # May 2020
 
 # packages
-using LinearAlgebra, Statistics, Compat
+using LinearAlgebra, Statistics, Compat, Plots
 
 # Parameters
 N = 3 # number of countries
@@ -77,10 +77,77 @@ end
 # Comparative statistics w.r.t. productivity
 z_grid = 1:0.01:3
 result = zeros(3 * N + 1, length(z_grid))
-L = [1, 1, 1]
+L = [2, 2, 2]
 
 for i = 1:length(z_grid)
     z = [2, 2, z_grid[i]]
     result[:, i] = equilibrium([1, 1, 1], z, L)
 end
 result
+
+# plot comparative statics with respect to z
+
+# real wages
+plot(z_grid, result[1, :], label = "Country 1 and 2", legend = :topleft)
+plot!(z_grid, result[3, :], label = "Country 3")
+xlabel!("Productivity in Country 3")
+ylabel!("Real Wage")
+
+savefig("z_real_wage.pdf")
+savefig("z_real_wage.png")
+
+# unemployment
+plot(z_grid, result[4, :], label = "Country 1 and 2", legend = :topright)
+plot!(z_grid, result[6, :], label = "Country 3")
+xlabel!("Productivity in Country 3")
+ylabel!("Unemployment Rate")
+
+savefig("z_unemployment.pdf")
+savefig("z_unemployment.png")
+
+# welfare
+plot(z_grid, result[7, :], label = "Country 1 and 2", legend = :topleft)
+plot!(z_grid, result[9, :], label = "Country 3")
+xlabel!("Productivity in Country 3")
+ylabel!("Welfare")
+
+savefig("z_welfare.pdf")
+savefig("z_welfare.png")
+
+# Comparative statics with respect to L
+L_grid = 1 : 0.01 : 3
+z = [2, 2, 2]
+result = zeros(3 * N + 1, length(L_grid))
+
+for i = 1:length(L_grid)
+    L = [2, 2, L_grid[i]]
+    result[:, i] = equilibrium([1, 1, 1], z, L)
+end
+result
+
+# real wages
+plot(L_grid, result[1, :], label = "Country 1 and 2", legend = :bottomright)
+plot!(L_grid, result[3, :], label = "Country 3")
+xlabel!("Labor in Country 3")
+ylabel!("Real Wage")
+
+savefig("L_real_wage.pdf")
+savefig("L_real_wage.png")
+
+# unemployment
+plot(L_grid, result[4, :], label = "Country 1 and 2", legend = :topright)
+plot!(L_grid, result[6, :], label = "Country 3")
+xlabel!("Labor in Country 3")
+ylabel!("Unemployment Rate")
+
+savefig("L_unemployment.pdf")
+savefig("L_unemployment.png")
+
+# welfare
+plot(L_grid, result[7, :], label = "Country 1 and 2", legend = :topleft)
+plot!(L_grid, result[9, :], label = "Country 3")
+xlabel!("Labor in Country 3")
+ylabel!("Welfare")
+
+savefig("L_welfare.pdf")
+savefig("L_welfare.png")
