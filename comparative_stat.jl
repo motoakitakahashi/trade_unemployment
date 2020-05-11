@@ -11,8 +11,6 @@ N = 3 # number of countries
 χ = 0.5 # labor force share in the Cobb-Douglas matching function
 ζ = [1, 1, 1] # vacancy cost vector
 f = [1, 1, 1] # entry cost vector
-t = [1 1.1 1.1; 1.1 1 1.1; 1.1 1.1 1] # trade cost matrix
-# in t, the rows are origins and the columns are destinations
 
 function VLratio(Φ, z)
     output = (σ - 1) ^ (1/χ) * (2*σ - 1) ^ (σ / (χ * (1-σ))) * Φ .^ (1/(σ-1)*χ) .* z .^ (1/χ) .* ζ .^ (-1/χ) .* f .^ (1/(χ * (1-σ)))
@@ -24,14 +22,14 @@ function expenditure(θ, L)
     return output
 end
 
-function price_index(Φ, θ, z, L)
+function price_index(Φ, θ, z, L, t)
     output1 = (σ-1) .^ (-(σ+1)) * (2*σ-1) .^ (σ+1) * t' * (Φ .^ (-σ) .* ζ .^ (σ+1) .* z .^ (-σ) .* θ .^ (χ*σ+1) .* L)
     output2 = output1 .^ (1/(1-σ))
     return output2
 end
 
-function market_potential(P, X)
-    output1 = t' * (P .^ (σ - 1) .* X)
+function market_potential(P, X, t)
+    output1 = t .^ (1-σ) * (P .^ (σ - 1) .* X)
     output2 = output1 .^ (1/σ)
     return output2
 end
@@ -42,7 +40,7 @@ end
 
 # z is the productivity vector
 # L is the labor force vector
-function equilibrium(Φ_guess, z, L)
+function equilibrium(Φ_guess, z, L, t)
     # setup for the while loop
     maxit = 5000
     tol = 10 ^ (-6)
@@ -58,9 +56,9 @@ function equilibrium(Φ_guess, z, L)
     while dif > tol && it < maxit
         θ = VLratio(Φ, z)
         X = expenditure(θ, L)
-        P = price_index(Φ, θ, z, L)
+        P = price_index(Φ, θ, z, L, t)
         P = P ./ P[1] # the composite good in country 1 is the numeraire
-        Φ_new = market_potential(P, X)
+        Φ_new = market_potential(P, X, t)
 
         dif = norm((Φ_new - Φ)./Φ, Inf)
         Φ = λ * Φ_new + (1 - λ) * Φ
@@ -78,10 +76,12 @@ end
 z_grid = 1:0.01:3
 result = zeros(3 * N + 1, length(z_grid))
 L = [2, 2, 2]
+t = [1 1.1 1.1; 1.1 1 1.1; 1.1 1.1 1] # trade cost matrix
+# in t, the rows are origins and the columns are destinations
 
 for i = 1:length(z_grid)
     z = [2, 2, z_grid[i]]
-    result[:, i] = equilibrium([1, 1, 1], z, L)
+    result[:, i] = equilibrium([1, 1, 1], z, L, t)
 end
 result
 
@@ -117,11 +117,12 @@ savefig("z_welfare.png")
 # Comparative statics with respect to L
 L_grid = 1 : 0.01 : 3
 z = [2, 2, 2]
+t = [1 1.1 1.1; 1.1 1 1.1; 1.1 1.1 1]
 result = zeros(3 * N + 1, length(L_grid))
 
 for i = 1:length(L_grid)
     L = [2, 2, L_grid[i]]
-    result[:, i] = equilibrium([1, 1, 1], z, L)
+    result[:, i] = equilibrium([1, 1, 1], z, L, t)
 end
 result
 
@@ -151,3 +152,42 @@ ylabel!("Welfare")
 
 savefig("L_welfare.pdf")
 savefig("L_welfare.png")
+
+
+# Comparatie statics with resoect to international trade costs
+z = [2, 2, 2]
+L = [2, 2, 2]
+
+t_grid = 1:0.01:2
+result = zeros(3 * N + 1, length(t_grid))
+
+for i = 1:length(t_grid)
+    inter_t = t_grid[i]
+    t = repeat([inter_t], N, N) - Diagonal(fill(inter_t, N)) + I(N)
+    result[:, i] = equilibrium([1, 1, 1], z, L, t)
+end
+result
+
+# plot real wages
+plot(t_grid, result[1, :], label = "")
+xlabel!("International Trade Cost")
+ylabel!("Real Wage")
+
+savefig("t_real_wage.pdf")
+savefig("t_real_wage.png")
+
+# plot unemployment
+plot(t_grid, result[4, :], label = "")
+xlabel!("International Trade Cost")
+ylabel!("Unemployment Rate")
+
+savefig("t_unemployment.pdf")
+savefig("t_unemployment.png")
+
+# plot welfare
+plot(t_grid, result[7, :], label = "")
+xlabel!("International Trade Cost")
+ylabel!("Welfare")
+
+savefig("t_welfare.pdf")
+savefig("t_welfare.png")
