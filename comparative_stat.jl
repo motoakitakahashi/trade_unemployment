@@ -12,20 +12,25 @@ N = 3 # number of countries
 ζ = [1, 1, 1] # vacancy cost vector
 f = [1, 1, 1] # entry cost vector
 
-function VLratio(Φ, z)
-    output = (σ - 1) ^ (1/χ) * (2*σ - 1) ^ (σ / (χ * (1-σ))) * Φ .^ (1/(σ-1)*χ) .* z .^ (1/χ) .* ζ .^ (-1/χ) .* f .^ (1/(χ * (1-σ)))
+function VLratio(Φ, P, z)
+    output = (σ - 1) ^ (1/χ) * (2*σ - 1) ^ (σ / (χ * (1-σ))) * Φ .^ (1/(σ-1)*χ) .* z .^ (1/χ) .* ζ .^ (-1/χ) .* f .^ (1/(χ * (1-σ))) .* P .^ (1/(χ * (1-σ)))
     return output
 end
 
-function expenditure(θ, L)
-    output = ζ .* θ .* L
+function expenditure(θ, M, P)
+    output = ζ .* θ .* L + M .* f .* P
     return output
 end
 
-function price_index(Φ, θ, z, L, t)
-    output1 = (σ-1) .^ (-(σ+1)) * (2*σ-1) .^ (σ+1) * t' * (Φ .^ (-σ) .* ζ .^ (σ+1) .* z .^ (-σ) .* θ .^ (χ*σ+1) .* L)
+function price_index(θ, M, z, t)
+    output1 = (2 * σ - 1) * (σ - 1) ^ (-1) * t' * (M .* ζ .* z .^ (-1) .* θ .^ χ)
     output2 = output1 .^ (1/(1-σ))
     return output2
+end
+
+function mass_of_firms(Φ, θ, z, L)
+    output = (2*σ-1)^σ * (σ-1)^(-σ) * Φ .^ (-σ) .* ζ .^ σ .* θ .^ (χ * (σ-1) + 1) .* z .^ (1-σ) .* L
+    return output
 end
 
 function market_potential(P, X, t)
@@ -40,7 +45,7 @@ end
 
 # z is the productivity vector
 # L is the labor force vector
-function equilibrium(Φ_guess, z, L, t)
+function equilibrium(Φ_guess, P_guess, z, L, t)
     # setup for the while loop
     maxit = 5000
     tol = 10 ^ (-6)
@@ -49,19 +54,23 @@ function equilibrium(Φ_guess, z, L, t)
     dif = 1
 
     Φ = Φ_guess
+    P = P_guess
     θ = zeros(N, 1) # I need to write an object before a while loop...
     X = zeros(N, 1)
-    P = zeros(N, 1)
+
 
     while dif > tol && it < maxit
-        θ = VLratio(Φ, z)
-        X = expenditure(θ, L)
-        P = price_index(Φ, θ, z, L, t)
-        P = P ./ P[1] # the composite good in country 1 is the numeraire
+        θ = VLratio(Φ, P, z)
+        M = mass_of_firms(Φ, θ, z, L)
+        X = expenditure(θ, M, P)
+        P_new = price_index(θ, M, z, t)
+        P_new = P_new ./ P_new[1] # the composite good in country 1 is the numeraire
         Φ_new = market_potential(P, X, t)
 
-        dif = norm((Φ_new - Φ)./Φ, Inf)
+
+        dif = norm(([Φ_new; P_new] - [Φ; P]) ./ [Φ; P], Inf)
         Φ = λ * Φ_new + (1 - λ) * Φ
+        P = λ * P_new + (1 - λ) * P
         it = it + 1
     end
 
@@ -72,8 +81,9 @@ function equilibrium(Φ_guess, z, L, t)
     return [w./P; (ones(N, 1) - e); wel; dif]
 end
 
+#
 # Comparative statistics w.r.t. productivity
-z_grid = 1:0.01:3
+z_grid = 1:0.01:7
 result = zeros(3 * N + 1, length(z_grid))
 L = [2, 2, 2]
 t = [1 1.1 1.1; 1.1 1 1.1; 1.1 1.1 1] # trade cost matrix
@@ -81,7 +91,7 @@ t = [1 1.1 1.1; 1.1 1 1.1; 1.1 1.1 1] # trade cost matrix
 
 for i = 1:length(z_grid)
     z = [2, 2, z_grid[i]]
-    result[:, i] = equilibrium([1, 1, 1], z, L, t)
+    result[:, i] = equilibrium([1, 1, 1], [1, 1, 1], z, L, t)
 end
 result
 
@@ -97,7 +107,7 @@ savefig("z_real_wage.pdf")
 savefig("z_real_wage.png")
 
 # unemployment
-plot(z_grid, result[4, :], label = "Country 1 and 2", legend = :topright)
+plot(z_grid, result[4, :], label = "Country 1 and 2", legend = :bottomleft)
 plot!(z_grid, result[6, :], label = "Country 3")
 xlabel!("Productivity in Country 3")
 ylabel!("Unemployment Rate")
@@ -114,20 +124,21 @@ ylabel!("Welfare")
 savefig("z_welfare.pdf")
 savefig("z_welfare.png")
 
+#
 # Comparative statics with respect to L
-L_grid = 1 : 0.01 : 3
+L_grid = 0.5 : 0.01 : 7
 z = [2, 2, 2]
 t = [1 1.1 1.1; 1.1 1 1.1; 1.1 1.1 1]
 result = zeros(3 * N + 1, length(L_grid))
 
 for i = 1:length(L_grid)
     L = [2, 2, L_grid[i]]
-    result[:, i] = equilibrium([1, 1, 1], z, L, t)
+    result[:, i] = equilibrium([1, 1, 1], [1, 1, 1], z, L, t)
 end
 result
 
 # real wages
-plot(L_grid, result[1, :], label = "Country 1 and 2", legend = :bottomright)
+plot(L_grid, result[1, :], label = "Country 1 and 2", legend = :bottomleft)
 plot!(L_grid, result[3, :], label = "Country 3")
 xlabel!("Labor in Country 3")
 ylabel!("Real Wage")
@@ -136,7 +147,7 @@ savefig("L_real_wage.pdf")
 savefig("L_real_wage.png")
 
 # unemployment
-plot(L_grid, result[4, :], label = "Country 1 and 2", legend = :topright)
+plot(L_grid, result[4, :], label = "Country 1 and 2", legend = :right)
 plot!(L_grid, result[6, :], label = "Country 3")
 xlabel!("Labor in Country 3")
 ylabel!("Unemployment Rate")
@@ -145,7 +156,7 @@ savefig("L_unemployment.pdf")
 savefig("L_unemployment.png")
 
 # welfare
-plot(L_grid, result[7, :], label = "Country 1 and 2", legend = :topleft)
+plot(L_grid, result[7, :], label = "Country 1 and 2", legend = :topright)
 plot!(L_grid, result[9, :], label = "Country 3")
 xlabel!("Labor in Country 3")
 ylabel!("Welfare")
@@ -158,13 +169,13 @@ savefig("L_welfare.png")
 z = [2, 2, 2]
 L = [2, 2, 2]
 
-t_grid = 1:0.01:2
+t_grid = 1:0.01:7
 result = zeros(3 * N + 1, length(t_grid))
 
 for i = 1:length(t_grid)
     inter_t = t_grid[i]
     t = repeat([inter_t], N, N) - Diagonal(fill(inter_t, N)) + I(N)
-    result[:, i] = equilibrium([1, 1, 1], z, L, t)
+    result[:, i] = equilibrium([1, 1, 1], [1, 1, 1], z, L, t)
 end
 result
 

@@ -38,7 +38,7 @@ function mass_of_firms(Φ, θ)
 end
 
 function market_potential(P, X)
-    output1 = t' * (P .^ (σ - 1) .* X)
+    output1 = t .^ (1-σ) * (P .^ (σ - 1) .* X)
     output2 = output1 .^ (1/σ)
     return output2
 end
@@ -65,7 +65,6 @@ function equilibrium(Φ_guess, P_guess)
         θ = VLratio(Φ, P)
         M = mass_of_firms(Φ, θ)
         X = expenditure(θ, M, P)
-        P = price_index(θ, M)
         P_new = price_index(θ, M)
         P_new = P_new ./ P_new[1] # the composite good in country 1 is the numeraire
         Φ_new = market_potential(P_new, X)
