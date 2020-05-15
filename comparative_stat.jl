@@ -14,7 +14,7 @@ N = 3 # number of countries
 f = [1, 1, 1] # entry cost vector
 
 function VLratio(Φ, P, z)
-    output = (σ - 1) ^ (1/χ) * (2*σ - 1) ^ (σ / (χ * (1-σ))) * Φ .^ (1/(σ-1)*χ) .* z .^ (1/χ) .* ζ .^ (-1/χ) .* f .^ (1/(χ * (1-σ))) .* P .^ (1/(χ * (1-σ)))
+    output = (σ - 1) ^ (1/χ) * (2*σ - 1) ^ (σ / (χ * (1-σ))) * Φ .^ (1 / ((σ-1)*χ) ) .* z .^ (1/χ) .* ζ .^ (-1/χ) .* f .^ (1/(χ * (1-σ))) .* P .^ (1/( χ * (1-σ) ))
     return output
 end
 
@@ -84,7 +84,7 @@ end
 
 #
 # Comparative statistics w.r.t. productivity
-z_grid = 1:0.01:7
+z_grid = 1:0.01:3
 result = zeros(3 * N + 1, length(z_grid))
 L = [2, 2, 2]
 t = [1 1.1 1.1; 1.1 1 1.1; 1.1 1.1 1] # trade cost matrix
@@ -127,7 +127,7 @@ savefig("z_welfare.png")
 
 #
 # Comparative statics with respect to L
-L_grid = 0.5 : 0.01 : 7
+L_grid = 1 : 0.01 : 3
 z = [2, 2, 2]
 t = [1 1.1 1.1; 1.1 1 1.1; 1.1 1.1 1]
 result = zeros(3 * N + 1, length(L_grid))
@@ -139,7 +139,7 @@ end
 result
 
 # real wages
-plot(L_grid, result[1, :], label = "Country 1 and 2", legend = :bottomleft)
+plot(L_grid, result[1, :], label = "Country 1 and 2", legend = :topleft)
 plot!(L_grid, result[3, :], label = "Country 3")
 xlabel!("Labor in Country 3")
 ylabel!("Real Wage")
@@ -148,7 +148,7 @@ savefig("L_real_wage.pdf")
 savefig("L_real_wage.png")
 
 # unemployment
-plot(L_grid, result[4, :], label = "Country 1 and 2", legend = :right)
+plot(L_grid, result[4, :], label = "Country 1 and 2", legend = :topright)
 plot!(L_grid, result[6, :], label = "Country 3")
 xlabel!("Labor in Country 3")
 ylabel!("Unemployment Rate")
@@ -157,7 +157,7 @@ savefig("L_unemployment.pdf")
 savefig("L_unemployment.png")
 
 # welfare
-plot(L_grid, result[7, :], label = "Country 1 and 2", legend = :topright)
+plot(L_grid, result[7, :], label = "Country 1 and 2", legend = :topleft)
 plot!(L_grid, result[9, :], label = "Country 3")
 xlabel!("Labor in Country 3")
 ylabel!("Welfare")
@@ -170,7 +170,7 @@ savefig("L_welfare.png")
 z = [2, 2, 2]
 L = [2, 2, 2]
 
-t_grid = 1:0.01:7
+t_grid = 1:0.01:3
 result = zeros(3 * N + 1, length(t_grid))
 
 for i = 1:length(t_grid)
