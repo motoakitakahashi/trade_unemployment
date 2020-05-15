@@ -24,8 +24,8 @@ function expenditure(θ, M, P)
 end
 
 function price_index(θ, M, z, t)
-    output1 = (2 * σ - 1) * (σ - 1) ^ (-1) * t' * (M .* ζ .* z .^ (-1) .* θ .^ χ)
-    output2 = output1 .^ (1/(1-σ))
+    output1 = (t') .^ (1 - σ) * (M .* ζ .^ (1 - σ) .* z .^ (σ - 1) .* θ .^ (χ * (1 - σ)))
+    output2 = (2 * σ - 1) * (σ - 1) ^ (-1) * output1 .^ (1/(1-σ))
     return output2
 end
 
