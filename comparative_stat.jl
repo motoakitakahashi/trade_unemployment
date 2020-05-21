@@ -14,23 +14,24 @@ N = 3 # number of countries
 f = [1, 1, 1] # entry cost vector
 
 function VLratio(Φ, P, z)
-    output = (σ - 1) ^ (1/χ) * (2*σ - 1) ^ (σ / (χ * (1-σ))) * Φ .^ (1 / ((σ-1)*χ) ) .* z .^ (1/χ) .* ζ .^ (-1/χ) .* f .^ (1/(χ * (1-σ))) .* P .^ (1/( χ * (1-σ) ))
+    output = (σ - 1) ^ (1/χ) * (2*σ - 1) ^ (σ / (χ * (1-σ))) * Φ .^ (1 / ((σ-1)*χ) ) .* z .^ (1/χ) .* ζ .^ (-1/χ) .* f .^ (1/(χ * (1-σ))) .* P .^ (σ/( χ * (1-σ) ))
     return output
 end
 
-function expenditure(θ, M, P)
-    output = ζ .* θ .* L + M .* f .* P
+function expenditure(θ, M, P, Φ, z, L)
+    output1 = (σ - 1) ^ (σ) * (2*σ - 1) ^ (-σ) * Φ .^ σ .* ζ .^ (-σ+1) .* P .^ (-σ+1) .* θ .^ (χ * (-σ+1)) .* z .^ (σ - 1) .* M
+    output = ζ .* θ .* L + M .* f .* P + output1
     return output
 end
 
-function price_index(θ, M, z, t)
-    output1 = (t') .^ (1 - σ) * (M .* ζ .^ (1 - σ) .* z .^ (σ - 1) .* θ .^ (χ * (1 - σ)))
+function price_index(θ, M, z, P, t)
+    output1 = (t') .^ (1 - σ) * (M .* (ζ .* P) .^ (1 - σ) .* z .^ (σ - 1) .* θ .^ (χ * (1 - σ)))
     output2 = (2 * σ - 1) * (σ - 1) ^ (-1) * output1 .^ (1/(1-σ))
     return output2
 end
 
-function mass_of_firms(Φ, θ, z, L)
-    output = (2*σ-1)^σ * (σ-1)^(-σ) * Φ .^ (-σ) .* ζ .^ σ .* θ .^ (χ * (σ-1) + 1) .* z .^ (1-σ) .* L
+function mass_of_firms(Φ, θ, P, z, L)
+    output = (2*σ-1)^σ * (σ-1)^(-σ) * Φ .^ (-σ) .* (ζ .* P) .^ σ .* θ .^ (χ * (σ-1) + 1) .* z .^ (1-σ) .* L
     return output
 end
 
@@ -62,9 +63,9 @@ function equilibrium(Φ_guess, P_guess, z, L, t)
 
     while dif > tol && it < maxit
         θ = VLratio(Φ, P, z)
-        M = mass_of_firms(Φ, θ, z, L)
-        X = expenditure(θ, M, P)
-        P_new = price_index(θ, M, z, t)
+        M = mass_of_firms(Φ, θ, P, z, L)
+        X = expenditure(θ, M, P, Φ, z, L)
+        P_new = price_index(θ, M, z, P, t)
         P_new = P_new ./ P_new[1] # the composite good in country 1 is the numeraire
         Φ_new = market_potential(P, X, t)
 
