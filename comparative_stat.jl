@@ -42,7 +42,7 @@ function market_potential(P, X, t)
 end
 
 
-# If we work in a while loop, we cannot access variabled defined outside the while loop.
+# If we work in a while loop, we cannot access variables defined outside the while loop.
 # To deal with this issue, I wrap the while loop that computes an equilibrium with function.
 
 # z is the productivity vector
